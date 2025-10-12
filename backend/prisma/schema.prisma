@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  firstName        String
+  lastName         String
+  username         String?   @unique
+  bio              String?
+  location         String?
+  profileImage     String?
+  isVerified       Boolean   @default(false)
+  exchangePreference ExchangePreference @default(FLEXIBLE)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  userSkills       UserSkill[]
+  sentConnections  Connection[] @relation("SentConnections")
+  receivedConnections Connection[] @relation("ReceivedConnections")
+  sentVouches      Vouch[] @relation("SentVouches")
+  receivedVouches  Vouch[] @relation("ReceivedVouches")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  reports          Report[] @relation("UserReports")
+  reportedBy       Report[] @relation("ReportedBy")
+
+  @@index([email])
+  @@index([username])
+  @@index([location])
+}
+
+enum ExchangePreference {
+  TEACHING_ONLY
+  LEARNING_ONLY
+  FLEXIBLE
+}
+
+model Skill {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  category    String
+  description String?
+  createdAt   DateTime @default(now())
+  
+  userSkills  UserSkill[]
+
+  @@index([category])
+  @@index([name])
+}
+
+model UserSkill {
+  id              String   @id @default(uuid())
+  userId          String
+  skillId         String
+  type            SkillType
+  proficiencyLevel ProficiencyLevel?
+  description     String?
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill           Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId, type])
+  @@index([userId])
+  @@index([skillId])
+  @@index([type])
+}
+
+enum SkillType {
+  OFFERED
+  WANTED
+}
+
+enum ProficiencyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+model Connection {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  status      ConnectionStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sender      User     @relation("SentConnections", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User     @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+}
+
+model Vouch {
+  id          String   @id @default(uuid())
+  voucherId   String
+  vouchedId   String
+  skillId     String?
+  comment     String?
+  rating      Int      @default(5)
+  createdAt   DateTime @default(now())
+
+  voucher     User     @relation("SentVouches", fields: [voucherId], references: [id], onDelete: Cascade)
+  vouched     User     @relation("ReceivedVouches", fields: [vouchedId], references: [id], onDelete: Cascade)
+
+  @@unique([voucherId, vouchedId])
+  @@index([voucherId])
+  @@index([vouchedId])
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  reporterId  String
+  reportedId  String
+  reason      String
+  description String?
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+
+  reporter    User     @relation("ReportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported    User     @relation("UserReports", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@index([status])
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+}
