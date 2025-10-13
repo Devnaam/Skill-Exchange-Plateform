@@ -9,6 +9,7 @@ import connectionRoutes from './routes/connectionRoutes';
 import messageRoutes from './routes/messageRoutes';
 import vouchRoutes from './routes/vouchRoutes';
 import reportRoutes from './routes/reportRoutes';
+import postRoutes from './routes/postRoutes';  // NEW
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/vouches', vouchRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/posts', postRoutes);  // NEW
 
 // Health check
 app.get('/api/health', (req, res) => {
