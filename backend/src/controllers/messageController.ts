@@ -5,6 +5,7 @@ import { AuthRequest } from '../types';
 const prisma = new PrismaClient();
 
 // Send message
+// Send message
 export const sendMessage = async (req: AuthRequest, res: Response) => {
   try {
     const senderId = req.user?.id;
@@ -14,7 +15,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Receiver ID and content are required' });
     }
 
-    // Check if users are connected
+    // Check if users are connected (either direction)
     const connection = await prisma.connection.findFirst({
       where: {
         OR: [
@@ -25,7 +26,10 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
     });
 
     if (!connection) {
-      return res.status(403).json({ error: 'You must be connected to send messages' });
+      return res.status(403).json({ 
+        error: 'You must be connected to send messages',
+        details: `No connection found between ${senderId} and ${receiverId}`
+      });
     }
 
     const message = await prisma.message.create({
@@ -61,12 +65,17 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
   }
 };
 
+
+// Get conversation with a user
 // Get conversation with a user
 export const getConversation = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     const { otherUserId } = req.params;
 
+    console.log(`Loading conversation between ${userId} and ${otherUserId}`);
+
+    // Get all messages between the two users
     const messages = await prisma.message.findMany({
       where: {
         OR: [
@@ -97,8 +106,10 @@ export const getConversation = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Mark messages as read
-    await prisma.message.updateMany({
+    console.log(`Found ${messages.length} messages`);
+
+    // Mark messages as read (only messages sent TO the current user)
+    const unreadCount = await prisma.message.updateMany({
       where: {
         senderId: otherUserId,
         receiverId: userId,
@@ -109,12 +120,15 @@ export const getConversation = async (req: AuthRequest, res: Response) => {
       },
     });
 
+    console.log(`Marked ${unreadCount.count} messages as read`);
+
     res.json({ messages });
   } catch (error) {
     console.error('Get conversation error:', error);
     res.status(500).json({ error: 'Server error fetching conversation' });
   }
 };
+
 
 // Get all conversations (list of users with last message)
 export const getConversations = async (req: AuthRequest, res: Response) => {

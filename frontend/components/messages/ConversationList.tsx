@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Conversation } from '@/types/message';
@@ -25,50 +24,52 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="divide-y">
       {conversations.map((conversation) => (
-        <Card
+        <button
           key={conversation.user.id}
           onClick={() => onSelectConversation(conversation.user.id)}
-          className={`cursor-pointer transition-colors ${
-            selectedUserId === conversation.user.id
-              ? 'bg-indigo-50 border-indigo-300'
-              : 'hover:bg-gray-50'
+          className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+            selectedUserId === conversation.user.id ? 'bg-indigo-50' : ''
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
               <Avatar
                 firstName={conversation.user.firstName}
                 lastName={conversation.user.lastName}
                 src={conversation.user.profileImage}
                 size="md"
               />
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-900 truncate">
+              {conversation.unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {conversation.unreadCount}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-semibold text-sm text-gray-900 truncate">
                   {conversation.user.firstName} {conversation.user.lastName}
                 </h4>
                 {conversation.lastMessage && (
-                  <p className="text-sm text-gray-600 truncate">
-                    {conversation.lastMessage.content}
-                  </p>
+                  <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                    {formatRelativeTime(conversation.lastMessage.createdAt)}
+                  </span>
                 )}
               </div>
-            </div>
-            <div className="flex flex-col items-end space-y-1">
-              {conversation.lastMessage && (
-                <p className="text-xs text-gray-500">
-                  {formatRelativeTime(conversation.lastMessage.createdAt)}
+              
+              {conversation.lastMessage ? (
+                <p className="text-xs text-gray-600 truncate">
+                  {conversation.lastMessage.content}
                 </p>
-              )}
-              {conversation.unreadCount > 0 && (
-                <Badge variant="danger" className="text-xs">
-                  {conversation.unreadCount}
-                </Badge>
+              ) : (
+                <p className="text-xs text-gray-400 italic">No messages yet</p>
               )}
             </div>
           </div>
-        </Card>
+        </button>
       ))}
     </div>
   );

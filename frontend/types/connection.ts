@@ -10,8 +10,8 @@ export interface Connection {
   message?: string;
   createdAt: string;
   updatedAt: string;
-  sender: User;
-  receiver: User;
+  sender: User;      // Make sure this is included
+  receiver: User;    // Make sure this is included
 }
 
 export interface ConnectionStatusResponse {

@@ -124,6 +124,8 @@ export const getConnections = async (req: AuthRequest, res: Response) => {
       },
     });
 
+    console.log(`Found ${connections.length} connections for user ${userId}`);
+
     // Separate connections
     const sent = connections.filter(
       (c) => c.senderId === userId && c.status === 'PENDING'
@@ -139,6 +141,7 @@ export const getConnections = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Server error fetching connections' });
   }
 };
+
 
 // Accept connection request
 export const acceptConnection = async (req: AuthRequest, res: Response) => {
@@ -286,5 +289,49 @@ export const getConnectionStatus = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Get connection status error:', error);
     res.status(500).json({ error: 'Server error fetching connection status' });
+  }
+};
+
+
+// Debug: Get connection details
+export const debugConnection = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { otherUserId } = req.params;
+
+    const connection = await prisma.connection.findFirst({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: userId },
+        ],
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    res.json({
+      found: !!connection,
+      connection,
+      userId,
+      otherUserId,
+    });
+  } catch (error) {
+    console.error('Debug connection error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };

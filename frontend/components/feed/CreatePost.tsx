@@ -51,38 +51,60 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onSubmit }) => {
   return (
     <Card>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex items-start space-x-3">
-          <Avatar
-            firstName={user.firstName}
-            lastName={user.lastName}
-            src={user.profileImage}
-            size="md"
-          />
-          <div className="flex-1">
+        {/* Avatar and Textarea */}
+        <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-3">
+          {/* Avatar - Hidden on mobile, shown on tablet+ */}
+          <div className="hidden sm:block">
+            <Avatar
+              firstName={user.firstName}
+              lastName={user.lastName}
+              src={user.profileImage}
+              size="md"
+            />
+          </div>
+          
+          {/* Mobile Avatar and Name */}
+          <div className="flex sm:hidden items-center space-x-2 w-full">
+            <Avatar
+              firstName={user.firstName}
+              lastName={user.lastName}
+              src={user.profileImage}
+              size="sm"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              {user.firstName} {user.lastName}
+            </span>
+          </div>
+          
+          {/* Textarea */}
+          <div className="flex-1 w-full">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Share your thoughts, tips, or experiences..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none text-sm sm:text-base"
               disabled={loading}
             />
           </div>
         </div>
 
+        {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-500 p-2 rounded text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-500 p-2 rounded text-xs sm:text-sm">
             {error}
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        {/* Controls - Responsive Layout */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          {/* Dropdowns */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
             {/* Post Type */}
             <select
               value={postType}
               onChange={(e) => setPostType(e.target.value as PostType)}
-              className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full sm:w-auto text-xs sm:text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
               disabled={loading}
             >
               <option value="TEXT">💬 Text</option>
@@ -95,7 +117,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onSubmit }) => {
             <select
               value={visibility}
               onChange={(e) => setVisibility(e.target.value as PostVisibility)}
-              className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full sm:w-auto text-xs sm:text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
               disabled={loading}
             >
               <option value="PUBLIC">🌍 Public</option>
@@ -104,7 +126,13 @@ export const CreatePost: React.FC<CreatePostProps> = ({ onSubmit }) => {
             </select>
           </div>
 
-          <Button type="submit" variant="primary" disabled={loading || !content.trim()}>
+          {/* Post Button */}
+          <Button 
+            type="submit" 
+            variant="primary" 
+            disabled={loading || !content.trim()}
+            className="w-full sm:w-auto"
+          >
             {loading ? 'Posting...' : 'Post'}
           </Button>
         </div>

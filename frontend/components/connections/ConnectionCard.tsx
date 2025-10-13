@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Connection } from '@/types/connection';
 import { formatRelativeTime } from '@/utils/formatters';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ConnectionCardProps {
   connection: Connection;
@@ -22,7 +23,20 @@ export const ConnectionCard: React.FC<ConnectionCardProps> = ({
   onCancel,
   onMessage,
 }) => {
-  const otherUser = type === 'sent' ? connection.receiver : connection.sender;
+  const { user: currentUser } = useAuth();
+  
+  // IMPORTANT: Determine which user is the "other" user
+  const otherUser = connection.senderId === currentUser?.id 
+    ? connection.receiver 
+    : connection.sender;
+
+  console.log('ConnectionCard Debug:', {
+    currentUserId: currentUser?.id,
+    senderId: connection.senderId,
+    receiverId: connection.receiverId,
+    otherUserId: otherUser.id,
+    otherUserName: `${otherUser.firstName} ${otherUser.lastName}`
+  });
 
   return (
     <Card>
@@ -82,7 +96,10 @@ export const ConnectionCard: React.FC<ConnectionCardProps> = ({
 
           {type === 'accepted' && (
             <Button
-              onClick={() => onMessage && onMessage(otherUser.id)}
+              onClick={() => {
+                console.log('Message button clicked for user:', otherUser.id);
+                onMessage && onMessage(otherUser.id);
+              }}
               variant="primary"
               size="sm"
             >

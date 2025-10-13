@@ -18,4 +18,6 @@ router.put('/:id/reject', authenticate, rejectConnection);
 router.delete('/:id/cancel', authenticate, cancelConnection);
 router.get('/status/:targetUserId', authenticate, getConnectionStatus);
 
+
+
 export default router;
