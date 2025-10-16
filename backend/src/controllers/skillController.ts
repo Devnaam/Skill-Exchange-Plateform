@@ -7,12 +7,12 @@ const prisma = new PrismaClient();
 // Get all skills (master list)
 export const getAllSkills = async (req: AuthRequest, res: Response) => {
   try {
-    const { category, search } = req.query;
+    const { categoryId, search } = req.query;
     
     const where: any = {};
     
-    if (category) {
-      where.category = category;
+    if (categoryId) {
+      where.categoryId = categoryId;
     }
     
     if (search) {
@@ -24,6 +24,9 @@ export const getAllSkills = async (req: AuthRequest, res: Response) => {
 
     const skills = await prisma.skill.findMany({
       where,
+      include: {
+        category: true,
+      },
       orderBy: {
         name: 'asc',
       },
@@ -39,26 +42,41 @@ export const getAllSkills = async (req: AuthRequest, res: Response) => {
 // Create a new skill (admin/auto-create)
 export const createSkill = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, category, description } = req.body;
+    const { name, categoryId, description } = req.body;
 
-    if (!name || !category) {
-      return res.status(400).json({ error: 'Name and category are required' });
+    if (!name || !categoryId) {
+      return res.status(400).json({ error: 'Name and categoryId are required' });
     }
 
     // Check if skill already exists
     const existingSkill = await prisma.skill.findUnique({
       where: { name },
+      include: {
+        category: true,
+      },
     });
 
     if (existingSkill) {
       return res.json({ skill: existingSkill });
     }
 
+    // Verify category exists
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      return res.status(400).json({ error: 'Invalid category' });
+    }
+
     const skill = await prisma.skill.create({
       data: {
         name,
-        category,
+        categoryId,
         description,
+      },
+      include: {
+        category: true,
       },
     });
 
@@ -77,7 +95,11 @@ export const getUserSkills = async (req: AuthRequest, res: Response) => {
     const userSkills = await prisma.userSkill.findMany({
       where: { userId },
       include: {
-        skill: true,
+        skill: {
+          include: {
+            category: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -98,7 +120,7 @@ export const getUserSkills = async (req: AuthRequest, res: Response) => {
 export const addUserSkill = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { skillId, skillName, category, type, proficiencyLevel, description } = req.body;
+    const { skillId, skillName, categoryId, type, proficiencyLevel, description } = req.body;
 
     if (!type || (type !== 'OFFERED' && type !== 'WANTED')) {
       return res.status(400).json({ error: 'Valid skill type is required' });
@@ -110,13 +132,33 @@ export const addUserSkill = async (req: AuthRequest, res: Response) => {
     if (!skillId && skillName) {
       let skill = await prisma.skill.findUnique({
         where: { name: skillName },
+        include: {
+          category: true,
+        },
       });
 
       if (!skill) {
+        // If creating a new skill, categoryId is required
+        if (!categoryId) {
+          return res.status(400).json({ error: 'Category is required for new skills' });
+        }
+
+        // Verify category exists
+        const category = await prisma.category.findUnique({
+          where: { id: categoryId },
+        });
+
+        if (!category) {
+          return res.status(400).json({ error: 'Invalid category' });
+        }
+
         skill = await prisma.skill.create({
           data: {
             name: skillName,
-            category: category || 'Other',
+            categoryId: categoryId,
+          },
+          include: {
+            category: true,
           },
         });
       }
@@ -152,7 +194,11 @@ export const addUserSkill = async (req: AuthRequest, res: Response) => {
         description: description || null,
       },
       include: {
-        skill: true,
+        skill: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
 
@@ -185,7 +231,11 @@ export const updateUserSkill = async (req: AuthRequest, res: Response) => {
         description: description !== undefined ? description : userSkill.description,
       },
       include: {
-        skill: true,
+        skill: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
 
@@ -221,26 +271,62 @@ export const deleteUserSkill = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get skills by category
-export const getSkillsByCategory = async (req: AuthRequest, res: Response) => {
+// Get all categories with skill count
+export const getCategories = async (req: AuthRequest, res: Response) => {
   try {
-    const skills = await prisma.skill.groupBy({
-      by: ['category'],
-      _count: {
-        category: true,
+    const categories = await prisma.category.findMany({
+      include: {
+        _count: {
+          select: { skills: true },
+        },
+      },
+      orderBy: {
+        name: 'asc',
       },
     });
 
-    const categories = await prisma.skill.findMany({
-      distinct: ['category'],
-      select: {
-        category: true,
-      },
-    });
-
-    res.json({ categories: categories.map(c => c.category) });
+    res.json({ categories });
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json({ error: 'Server error fetching categories' });
+  }
+};
+
+// Get skills by category (FIXED - now uses categoryId)
+export const getSkillsByCategory = async (req: AuthRequest, res: Response) => {
+  try {
+    const { categoryId } = req.params;
+
+    if (!categoryId) {
+      return res.status(400).json({ error: 'Category ID is required' });
+    }
+
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+      include: {
+        skills: {
+          orderBy: {
+            name: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.json({ 
+      category: {
+        id: category.id,
+        name: category.name,
+        description: category.description,
+        icon: category.icon,
+      },
+      skills: category.skills,
+    });
+  } catch (error) {
+    console.error('Get skills by category error:', error);
+    res.status(500).json({ error: 'Server error fetching skills' });
   }
 };

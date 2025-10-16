@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==================== USER MODEL ====================
 model User {
   id               String    @id @default(uuid())
   email            String    @unique
@@ -16,67 +17,62 @@ model User {
   username         String?   @unique
   bio              String?
   location         String?
+
+  // Contact Information
+  phone            String?
+  website          String?
+
+  // Social Media
+  linkedin         String?
+  twitter          String?
+  github           String?
+
+  // Personal Details
+  languages        String?
+  interests        String?
+  experienceYears  Int?
+
+  // Preferences
+  availability         String @default("AVAILABLE")
+  preferredMeetingType String @default("BOTH")
+  exchangePreference   ExchangePreference @default(FLEXIBLE)
+
+  // Location-based (for future features)
+  latitude         Float?
+  longitude        Float?
+
+  // System Fields
   profileImage     String?
   isVerified       Boolean   @default(false)
-  exchangePreference ExchangePreference @default(FLEXIBLE)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   // Relations
-  userSkills       UserSkill[]
-  sentConnections  Connection[] @relation("SentConnections")
+  userSkills          UserSkill[]
+  sentConnections     Connection[] @relation("SentConnections")
   receivedConnections Connection[] @relation("ReceivedConnections")
-  sentVouches      Vouch[] @relation("SentVouches")
-  receivedVouches  Vouch[] @relation("ReceivedVouches")
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  reports          Report[] @relation("UserReports")
-  reportedBy       Report[] @relation("ReportedBy")
+  sentVouches         Vouch[] @relation("SentVouches")
+  receivedVouches     Vouch[] @relation("ReceivedVouches")
+  sentMessages        Message[] @relation("SentMessages")
+  receivedMessages    Message[] @relation("ReceivedMessages")
+  reports             Report[] @relation("UserReports")
+  reportedBy          Report[] @relation("ReportedBy")
+  posts               Post[]
+  likes               Like[]
+  comments            Comment[]
 
   @@index([email])
   @@index([username])
   @@index([location])
-  posts           Post[]
-  likes           Like[]
-  comments        Comment[]
+  @@index([availability])
+  @@index([latitude, longitude])
 }
 
+// ==================== ENUMS ====================
 enum ExchangePreference {
   TEACHING_ONLY
   LEARNING_ONLY
   FLEXIBLE
-}
-
-model Skill {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  category    String
-  description String?
-  createdAt   DateTime @default(now())
-  
-  userSkills  UserSkill[]
-  posts           Post[]
-
-  @@index([category])
-  @@index([name])
-}
-
-model UserSkill {
-  id              String   @id @default(uuid())
-  userId          String
-  skillId         String
-  type            SkillType
-  proficiencyLevel ProficiencyLevel?
-  description     String?
-  createdAt       DateTime @default(now())
-  
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skill           Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, skillId, type])
-  @@index([userId])
-  @@index([skillId])
-  @@index([type])
 }
 
 enum SkillType {
@@ -91,107 +87,16 @@ enum ProficiencyLevel {
   EXPERT
 }
 
-model Connection {
-  id          String   @id @default(uuid())
-  senderId    String
-  receiverId  String
-  status      ConnectionStatus @default(PENDING)
-  message     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  sender      User     @relation("SentConnections", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User     @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  @@unique([senderId, receiverId])
-  @@index([senderId])
-  @@index([receiverId])
-  @@index([status])
-}
-
 enum ConnectionStatus {
   PENDING
   ACCEPTED
   REJECTED
 }
 
-model Message {
-  id          String   @id @default(uuid())
-  senderId    String
-  receiverId  String
-  content     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  @@index([senderId])
-  @@index([receiverId])
-  @@index([createdAt])
-}
-
-model Vouch {
-  id          String   @id @default(uuid())
-  voucherId   String
-  vouchedId   String
-  skillId     String?
-  comment     String?
-  rating      Int      @default(5)
-  createdAt   DateTime @default(now())
-
-  voucher     User     @relation("SentVouches", fields: [voucherId], references: [id], onDelete: Cascade)
-  vouched     User     @relation("ReceivedVouches", fields: [vouchedId], references: [id], onDelete: Cascade)
-
-  @@unique([voucherId, vouchedId])
-  @@index([voucherId])
-  @@index([vouchedId])
-}
-
-model Report {
-  id          String   @id @default(uuid())
-  reporterId  String
-  reportedId  String
-  reason      String
-  description String?
-  status      ReportStatus @default(PENDING)
-  createdAt   DateTime @default(now())
-
-  reporter    User     @relation("ReportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
-  reported    User     @relation("UserReports", fields: [reportedId], references: [id], onDelete: Cascade)
-
-  @@index([reporterId])
-  @@index([reportedId])
-  @@index([status])
-}
-
 enum ReportStatus {
   PENDING
   REVIEWED
   RESOLVED
-}
-
-
-model Post {
-  id          String   @id @default(uuid())
-  userId      String
-  content     String
-  postType    PostType @default(TEXT)
-  skillId     String?
-  visibility  PostVisibility @default(PUBLIC)
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skill       Skill?   @relation(fields: [skillId], references: [id], onDelete: SetNull)
-  likes       Like[]
-  comments    Comment[]
-  
-  @@index([userId])
-  @@index([createdAt])
-  @@index([postType])
-  @@index([visibility])
 }
 
 enum PostType {
@@ -207,6 +112,157 @@ enum PostVisibility {
   PRIVATE
 }
 
+// ==================== CATEGORY MODEL ====================
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  icon        String?  // Optional: emoji or icon identifier
+  createdAt   DateTime @default(now())
+  
+  skills      Skill[]
+
+  @@index([name])
+}
+
+// ==================== SKILL MODEL ====================
+model Skill {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  categoryId  String
+  description String?
+  createdAt   DateTime @default(now())
+  
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userSkills  UserSkill[]
+  posts       Post[]
+  vouches     Vouch[]
+
+  @@index([categoryId])
+  @@index([name])
+}
+
+// ==================== USER SKILL MODEL ====================
+model UserSkill {
+  id               String            @id @default(uuid())
+  userId           String
+  skillId          String
+  type             SkillType
+  proficiencyLevel ProficiencyLevel?
+  description      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill            Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId, type])
+  @@index([userId])
+  @@index([skillId])
+  @@index([type])
+}
+
+// ==================== CONNECTION MODEL ====================
+model Connection {
+  id          String           @id @default(uuid())
+  senderId    String
+  receiverId  String
+  status      ConnectionStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  sender      User             @relation("SentConnections", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User             @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+// ==================== MESSAGE MODEL ====================
+model Message {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@index([isRead])
+}
+
+// ==================== VOUCH MODEL ====================
+model Vouch {
+  id          String   @id @default(uuid())
+  voucherId   String
+  vouchedId   String
+  skillId     String?
+  comment     String?
+  rating      Int      @default(5)
+  createdAt   DateTime @default(now())
+
+  voucher     User     @relation("SentVouches", fields: [voucherId], references: [id], onDelete: Cascade)
+  vouched     User     @relation("ReceivedVouches", fields: [vouchedId], references: [id], onDelete: Cascade)
+  skill       Skill?   @relation(fields: [skillId], references: [id], onDelete: SetNull)
+
+  @@unique([voucherId, vouchedId])
+  @@index([voucherId])
+  @@index([vouchedId])
+  @@index([skillId])
+}
+
+// ==================== REPORT MODEL ====================
+model Report {
+  id          String       @id @default(uuid())
+  reporterId  String
+  reportedId  String
+  reason      String
+  description String?
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  resolvedAt  DateTime?
+
+  reporter    User         @relation("ReportedBy", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported    User         @relation("UserReports", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@index([status])
+}
+
+// ==================== POST MODEL ====================
+model Post {
+  id          String         @id @default(uuid())
+  userId      String
+  content     String
+  postType    PostType       @default(TEXT)
+  skillId     String?
+  visibility  PostVisibility @default(PUBLIC)
+  imageUrl    String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill       Skill?         @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  likes       Like[]
+  comments    Comment[]
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@index([postType])
+  @@index([visibility])
+  @@index([skillId])
+}
+
+// ==================== LIKE MODEL ====================
 model Like {
   id        String   @id @default(uuid())
   userId    String
@@ -221,6 +277,7 @@ model Like {
   @@index([userId])
 }
 
+// ==================== COMMENT MODEL ====================
 model Comment {
   id        String   @id @default(uuid())
   userId    String
@@ -234,4 +291,5 @@ model Comment {
 
   @@index([postId])
   @@index([userId])
+  @@index([createdAt])
 }

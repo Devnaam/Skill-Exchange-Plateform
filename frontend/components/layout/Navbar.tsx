@@ -1,80 +1,58 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
+import { useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
-import { useMessages } from '@/hooks/useMessages';
 
 export const Navbar = () => {
   const { data: session, status } = useSession();
-  const { unreadCount } = useMessages();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="text-xl sm:text-2xl font-bold text-indigo-600">
-              SkillExchange
-            </Link>
-          </div>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold text-slate-900">SkillExchange</span>
+          </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
             {status === 'authenticated' ? (
               <>
-                <Link
-                  href="/dashboard"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-                >
+                <Link href="/dashboard" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
                   Dashboard
                 </Link>
-                <Link
-                  href="/feed"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-                >
+                <Link href="/feed" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
                   Feed
                 </Link>
-                <Link
-                  href="/matches"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-                >
+                <Link href="/matches" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
                   Matches
                 </Link>
-                <Link
-                  href="/connections"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-                >
-                  Connections
-                </Link>
-                <Link
-                  href="/messages"
-                  className="text-gray-700 hover:text-indigo-600 font-medium relative transition-colors"
-                >
+                <Link href="/messages" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
                   Messages
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
                 </Link>
-                <div className="flex items-center space-x-3">
-                  <Link href="/profile">
+                
+                {/* User Menu */}
+                <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
+                  <Link href="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <Avatar
-                      firstName={session.user.firstName}
-                      lastName={session.user.lastName}
-                      src={session.user.profileImage}
+                      firstName={session.user?.firstName || ''}
+                      lastName={session.user?.lastName || ''}
+                      src={session.user?.profileImage}
                       size="sm"
                     />
                   </Link>
                   <button
                     onClick={() => signOut({ callbackUrl: '/' })}
-                    className="text-gray-700 hover:text-red-600 font-medium transition-colors"
+                    className="text-slate-600 hover:text-red-600 font-medium transition-colors"
                   >
                     Logout
                   </button>
@@ -82,125 +60,85 @@ export const Navbar = () => {
               </>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-                >
-                  Login
+                <Link href="/feed" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                  Explore
+                </Link>
+                <Link href="/login" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                  Sign in
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-md font-medium transition-colors"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition-colors"
                 >
-                  Sign Up
+                  Get Started
                 </Link>
               </>
             )}
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={toggleMenu}
-              className="text-gray-700 hover:text-indigo-600 focus:outline-none"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+          >
+            <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               )}
-            </button>
-          </div>
+            </svg>
+          </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t">
-          <div className="px-2 pt-2 pb-3 space-y-1">
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 bg-white">
+          <div className="px-4 py-3 space-y-2">
             {status === 'authenticated' ? (
               <>
-                <div className="flex items-center space-x-3 px-3 py-3 border-b">
-                  <Avatar
-                    firstName={session.user.firstName}
-                    lastName={session.user.lastName}
-                    src={session.user.profileImage}
-                    size="sm"
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {session.user.firstName} {session.user.lastName}
-                    </p>
-                    <p className="text-xs text-gray-500">{session.user.email}</p>
-                  </div>
-                </div>
-
                 <Link
                   href="/dashboard"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  onClick={toggleMenu}
+                  className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/feed"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  onClick={toggleMenu}
+                  className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Feed
                 </Link>
                 <Link
-                  href="/profile"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  onClick={toggleMenu}
-                >
-                  My Profile
-                </Link>
-                <Link
-                  href="/skills"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  onClick={toggleMenu}
-                >
-                  My Skills
-                </Link>
-                <Link
                   href="/matches"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  onClick={toggleMenu}
+                  className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  Find Matches
-                </Link>
-                <Link
-                  href="/connections"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  onClick={toggleMenu}
-                >
-                  Connections
+                  Matches
                 </Link>
                 <Link
                   href="/messages"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 relative"
-                  onClick={toggleMenu}
+                  className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Messages
-                  {unreadCount > 0 && (
-                    <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                      {unreadCount}
-                    </span>
-                  )}
                 </Link>
-
+                <Link
+                  href="/profile"
+                  className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Profile
+                </Link>
                 <button
                   onClick={() => {
-                    toggleMenu();
+                    setMobileMenuOpen(false);
                     signOut({ callbackUrl: '/' });
                   }}
-                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                  className="w-full text-left px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 font-medium transition-colors"
                 >
                   Logout
                 </button>
@@ -208,18 +146,25 @@ export const Navbar = () => {
             ) : (
               <>
                 <Link
-                  href="/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  onClick={toggleMenu}
+                  href="/feed"
+                  className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  Login
+                  Explore
+                </Link>
+                <Link
+                  href="/login"
+                  className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Sign in
                 </Link>
                 <Link
                   href="/register"
-                  className="block px-3 py-2 rounded-md text-base font-medium bg-indigo-600 text-white hover:bg-indigo-700"
-                  onClick={toggleMenu}
+                  className="block px-4 py-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-medium transition-colors text-center"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  Sign Up
+                  Get Started
                 </Link>
               </>
             )}
