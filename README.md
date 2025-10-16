@@ -599,12 +599,11 @@ in the Software without restriction...
 
 **Project Maintainer:** Your Name
 
-- Email: your.email@example.com
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
-- Twitter: [@yourhandle](https://twitter.com/yourhandle)
-- GitHub: [@yourusername](https://github.com/yourusername)
+- Email: priyadershi586@gmail.com
+- LinkedIn: [Your LinkedIn](https://www.linkedin.com/in/devnaam-priyadershi-56a256282/)
+- GitHub: [@yourusername](https://github.com/devnaam)
 
-**Project Link:** [https://github.com/yourusername/skill-exchange-platform](https://github.com/yourusername/skill-exchange-platform)
+**Project Link:** [https://github.com/Devnaam/Skill-Exchange-Plateform](https://github.com/Devnaam/Skill-Exchange-Plateform)
 
 ---
 
@@ -624,7 +623,7 @@ in the Software without restriction...
 
 **⭐ Star this repo if you find it helpful!**
 
-Made with ❤️ by the SkillExchange Team
+Made with ❤️ by Devnaa Priyadershi
 
 [Back to Top](#-skillexchange)
 
